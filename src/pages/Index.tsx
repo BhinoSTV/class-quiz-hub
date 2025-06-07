@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,9 @@ import VideoLecture from '@/components/VideoLecture';
 import QuizComponent from '@/components/QuizComponent';
 import AdminPanel from '@/components/AdminPanel';
 import StudentDashboard from '@/components/StudentDashboard';
+import StudentStatusPanel from '@/components/StudentStatusPanel';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Users, Award, Settings } from 'lucide-react';
+import { BookOpen, Users, Award, Settings, FileText } from 'lucide-react';
 
 interface Lecture {
   id: string;
@@ -164,7 +164,7 @@ const Index = () => {
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="lectures" className="flex items-center gap-2">
               <BookOpen size={16} />
               Lectures
@@ -176,6 +176,10 @@ const Index = () => {
             <TabsTrigger value="students" className="flex items-center gap-2">
               <Users size={16} />
               Students
+            </TabsTrigger>
+            <TabsTrigger value="status" className="flex items-center gap-2">
+              <FileText size={16} />
+              Status
             </TabsTrigger>
             <TabsTrigger value="admin" className="flex items-center gap-2">
               <Settings size={16} />
@@ -236,6 +240,10 @@ const Index = () => {
 
           <TabsContent value="students">
             <StudentDashboard scores={studentScores} lectures={lectures} quizzes={quizzes} />
+          </TabsContent>
+
+          <TabsContent value="status">
+            <StudentStatusPanel isAdmin={isAdmin} />
           </TabsContent>
 
           <TabsContent value="admin">
