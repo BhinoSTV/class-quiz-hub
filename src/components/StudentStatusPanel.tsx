@@ -134,7 +134,9 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
     });
   };
 
-  const handleStudentLookup = () => {
+  const handleStudentLookup = (studentNumberParam?: string) => {
+    const searchTerm = studentNumberParam || studentLookup;
+    
     if (worksheets.length === 0) {
       toast({
         title: 'No Data Available',
@@ -148,8 +150,8 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
     if (!masterSheet) return;
 
     const student = masterSheet.data.find(s => 
-      s['Student Number']?.toLowerCase() === studentLookup.toLowerCase() || 
-      s['Name']?.toLowerCase().includes(studentLookup.toLowerCase())
+      s['Student Number']?.toLowerCase() === searchTerm.toLowerCase() || 
+      s['Name']?.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
     if (student) {
@@ -169,13 +171,22 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
         }
       });
       
-      setFoundStudent(compiledData);
+      if (studentNumberParam) {
+        setLookedUpStudent(compiledData);
+      } else {
+        setFoundStudent(compiledData);
+      }
+      
       toast({
         title: 'Student Found',
         description: `Displaying status for ${student['Name']}`,
       });
     } else {
-      setFoundStudent(null);
+      if (studentNumberParam) {
+        setLookedUpStudent(null);
+      } else {
+        setFoundStudent(null);
+      }
       toast({
         title: 'Student Not Found',
         description: 'Please check the Student Number or name and try again.',
