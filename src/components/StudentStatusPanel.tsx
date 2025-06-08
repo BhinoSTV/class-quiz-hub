@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -383,7 +384,7 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
                   placeholder="e.g., STU001 or Juan Dela Cruz"
                   onKeyPress={(e) => e.key === 'Enter' && handleStudentLookup()}
                 />
-                <Button onClick={handleStudentLookup}>
+                <Button onClick={() => handleStudentLookup()}>
                   <Search size={16} />
                   Search
                 </Button>
