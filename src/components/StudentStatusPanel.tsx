@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,9 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Search, Eye, Download, Edit, Save, Plus, Trash2 } from 'lucide-react';
 
 interface Student {
-  studentNumber: string;
-  name: string;
-  section: string;
+  'Student Number': string;
+  'Name': string;
+  'Section': string;
   [key: string]: any;
 }
 
@@ -150,7 +149,12 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
     
     if (student) {
       // Compile data from all worksheets for this student
-      const compiledData: Student = { ...student };
+      const compiledData: Student = { 
+        'Student Number': student['Student Number'],
+        'Name': student['Name'],
+        'Section': student['Section']
+      };
+      
       worksheets.forEach(worksheet => {
         if (worksheet.name !== 'Students') {
           const studentRecord = worksheet.data.find(d => d['Student Number'] === student['Student Number']);
