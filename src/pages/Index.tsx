@@ -7,8 +7,9 @@ import QuizComponent from '@/components/QuizComponent';
 import AdminPanel from '@/components/AdminPanel';
 import StudentDashboard from '@/components/StudentDashboard';
 import StudentStatusPanel from '@/components/StudentStatusPanel';
+import InstructorProfile from '@/components/InstructorProfile';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Users, Award, Settings, FileText, GraduationCap, Sparkles } from 'lucide-react';
+import { BookOpen, Users, Award, Settings, FileText, GraduationCap, Sparkles, UserCheck } from 'lucide-react';
 
 interface Lecture {
   id: string;
@@ -180,7 +181,7 @@ const Index = () => {
 
         <div className="max-w-6xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-12 bg-white/70 backdrop-blur-sm border border-white/20 shadow-xl rounded-2xl p-2 h-auto">
+            <TabsList className="grid w-full grid-cols-6 mb-12 bg-white/70 backdrop-blur-sm border border-white/20 shadow-xl rounded-2xl p-2 h-auto">
               <TabsTrigger 
                 value="lectures" 
                 className="flex items-center gap-2 py-4 px-6 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:scale-105"
@@ -208,6 +209,13 @@ const Index = () => {
               >
                 <FileText size={18} />
                 <span className="font-medium">Status</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="instructor" 
+                className="flex items-center gap-2 py-4 px-6 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:scale-105"
+              >
+                <UserCheck size={18} />
+                <span className="font-medium">Instructor</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="admin" 
@@ -318,6 +326,10 @@ const Index = () => {
                   <StudentStatusPanel isAdmin={isAdmin} />
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="instructor" className="animate-fade-in">
+              <InstructorProfile />
             </TabsContent>
 
             <TabsContent value="admin" className="animate-fade-in">
