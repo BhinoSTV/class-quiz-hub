@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Search, Eye, Download, Edit, Save, Plus, Trash2 } from 'lucide-react';
+import StudentAuth from './StudentAuth';
 
 interface Student {
   'Student Number': string;
@@ -33,6 +35,9 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
   const [uploadHistory, setUploadHistory] = useState<{ date: string; filename: string; worksheetCount: number }[]>([]);
   const [editMode, setEditMode] = useState<{ worksheet: string; row: number } | null>(null);
   const [editingData, setEditingData] = useState<Record<string, any>>({});
+  const [studentLoggedIn, setStudentLoggedIn] = useState(false);
+  const [currentStudentNumber, setCurrentStudentNumber] = useState<string | null>(null);
+  const [lookedUpStudent, setLookedUpStudent] = useState<Student | null>(null);
   const { toast } = useToast();
 
   const parseExcelFile = (text: string): WorksheetData[] => {
@@ -238,6 +243,113 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
       description: 'Student record deleted successfully.',
     });
   };
+
+  const handleStudentLogin = (studentNumber: string) => {
+    setStudentLoggedIn(true);
+    setCurrentStudentNumber(studentNumber);
+    
+    // Auto-search for the logged-in student
+    if (worksheets.length > 0) {
+      const studentData = worksheets[0].data.find(student => 
+        student['Student Number'] === studentNumber
+      );
+      
+      if (studentData) {
+        handleStudentLookup(studentNumber);
+      }
+    }
+  };
+
+  const handleStudentLogout = () => {
+    setStudentLoggedIn(false);
+    setCurrentStudentNumber(null);
+    setLookedUpStudent(null);
+  };
+
+  if (!isAdmin && !studentLoggedIn) {
+    return (
+      <div className="space-y-6">
+        <StudentAuth
+          onStudentLogin={handleStudentLogin}
+          isLoggedIn={studentLoggedIn}
+          currentStudent={currentStudentNumber}
+          onLogout={handleStudentLogout}
+        />
+      </div>
+    );
+  }
+
+  if (!isAdmin && studentLoggedIn) {
+    return (
+      <div className="space-y-6">
+        <StudentAuth
+          onStudentLogin={handleStudentLogin}
+          isLoggedIn={studentLoggedIn}
+          currentStudent={currentStudentNumber}
+          onLogout={handleStudentLogout}
+        />
+        
+        {lookedUpStudent && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Academic Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
+                  <div>
+                    <span className="font-semibold">Student Number:</span> {lookedUpStudent['Student Number']}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Name:</span> {lookedUpStudent['Name']}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Section:</span> {lookedUpStudent['Section']}
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {Object.entries(lookedUpStudent).map(([key, value]) => {
+                    if (['Student Number', 'Name', 'Section'].includes(key)) return null;
+                    
+                    return (
+                      <Card key={key}>
+                        <CardHeader>
+                          <CardTitle className="text-lg">{key}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {typeof value === 'object' && value !== null ? (
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  {Object.keys(value as Record<string, any>).map(subKey => (
+                                    <TableHead key={subKey}>{subKey}</TableHead>
+                                  ))}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                <TableRow>
+                                  {Object.values(value as Record<string, any>).map((subValue, idx) => (
+                                    <TableCell key={idx}>{String(subValue)}</TableCell>
+                                  ))}
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          ) : (
+                            <p className="text-lg">{String(value)}</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (
