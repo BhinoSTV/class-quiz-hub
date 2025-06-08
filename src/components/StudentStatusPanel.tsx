@@ -4,20 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, Search, Eye, Download } from 'lucide-react';
+import { Upload, FileText, Search, Eye, Download, Edit, Save, Plus, Trash2 } from 'lucide-react';
 
-interface StudentStatus {
-  studentId: string;
+interface Student {
+  studentNumber: string;
   name: string;
-  quiz1?: number;
-  quiz2?: number;
-  attendance?: string;
-  remarks?: string;
-  [key: string]: any; // Allow additional columns
+  section: string;
+  [key: string]: any;
+}
+
+interface WorksheetData {
+  name: string;
+  headers: string[];
+  data: Record<string, any>[];
 }
 
 interface StudentStatusPanelProps {
@@ -25,44 +27,68 @@ interface StudentStatusPanelProps {
 }
 
 const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
-  const [studentData, setStudentData] = useState<StudentStatus[]>([]);
-  const [previewData, setPreviewData] = useState<StudentStatus[]>([]);
+  const [worksheets, setWorksheets] = useState<WorksheetData[]>([]);
+  const [previewWorksheets, setPreviewWorksheets] = useState<WorksheetData[]>([]);
   const [studentLookup, setStudentLookup] = useState('');
-  const [foundStudent, setFoundStudent] = useState<StudentStatus | null>(null);
-  const [uploadHistory, setUploadHistory] = useState<{ date: string; filename: string; recordCount: number }[]>([]);
+  const [foundStudent, setFoundStudent] = useState<Student | null>(null);
+  const [uploadHistory, setUploadHistory] = useState<{ date: string; filename: string; worksheetCount: number }[]>([]);
+  const [editMode, setEditMode] = useState<{ worksheet: string; row: number } | null>(null);
+  const [editingData, setEditingData] = useState<Record<string, any>>({});
   const { toast } = useToast();
 
-  const parseCSV = (text: string): StudentStatus[] => {
+  const parseExcelFile = (text: string): WorksheetData[] => {
+    // Simulate parsing multiple worksheets from Excel
+    // In a real implementation, this would use a library like xlsx
     const lines = text.trim().split('\n');
     if (lines.length < 2) return [];
 
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const data: StudentStatus[] = [];
+    // For demo purposes, we'll simulate multiple worksheets
+    const masterSheet: WorksheetData = {
+      name: 'Students',
+      headers: ['Student Number', 'Name', 'Section'],
+      data: []
+    };
 
+    const examSheet: WorksheetData = {
+      name: 'Exams',
+      headers: ['Student Number', 'Midterm', 'Final'],
+      data: []
+    };
+
+    const quizSheet: WorksheetData = {
+      name: 'Quizzes',
+      headers: ['Student Number', 'Quiz 1', 'Quiz 2', 'Quiz 3'],
+      data: []
+    };
+
+    const projectSheet: WorksheetData = {
+      name: 'Projects',
+      headers: ['Student Number', 'Project 1', 'Project 2'],
+      data: []
+    };
+
+    // Parse the uploaded CSV as master student list
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
       if (values.length >= 2) {
-        const student: StudentStatus = {
-          studentId: values[0] || '',
-          name: values[1] || '',
-        };
+        const studentNumber = values[0] || `STU${i.toString().padStart(3, '0')}`;
+        const name = values[1] || `Student ${i}`;
+        const section = values[2] || 'A';
 
-        // Map remaining columns to student object
-        for (let j = 2; j < headers.length && j < values.length; j++) {
-          const header = headers[j].toLowerCase();
-          const value = values[j];
-          
-          if (header.includes('quiz') && !isNaN(Number(value))) {
-            student[header] = Number(value);
-          } else {
-            student[header] = value;
-          }
-        }
+        // Add to master sheet
+        const masterRecord: Record<string, any> = { 'Student Number': studentNumber, 'Name': name, 'Section': section };
+        masterSheet.data.push(masterRecord);
 
-        data.push(student);
+        // Add placeholder data to other sheets
+        examSheet.data.push({ 'Student Number': studentNumber, 'Midterm': '', 'Final': '' });
+        quizSheet.data.push({ 'Student Number': studentNumber, 'Quiz 1': '', 'Quiz 2': '', 'Quiz 3': '' });
+        projectSheet.data.push({ 'Student Number': studentNumber, 'Project 1': '', 'Project 2': '' });
       }
     }
-    return data;
+
+    return [masterSheet, examSheet, quizSheet, projectSheet];
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,11 +99,11 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
     reader.onload = (e) => {
       const text = e.target?.result as string;
       try {
-        const parsed = parseCSV(text);
-        setPreviewData(parsed);
+        const parsed = parseExcelFile(text);
+        setPreviewWorksheets(parsed);
         toast({
           title: 'File Parsed Successfully',
-          description: `Found ${parsed.length} student records. Review before publishing.`,
+          description: `Found ${parsed.length} worksheets with student data. Review before publishing.`,
         });
       } catch (error) {
         toast({
@@ -91,48 +117,122 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
   };
 
   const publishData = () => {
-    setStudentData(previewData);
+    setWorksheets(previewWorksheets);
     setUploadHistory(prev => [...prev, {
       date: new Date().toLocaleDateString(),
-      filename: `upload_${Date.now()}.csv`,
-      recordCount: previewData.length
+      filename: `workbook_${Date.now()}.xlsx`,
+      worksheetCount: previewWorksheets.length
     }]);
-    setPreviewData([]);
+    setPreviewWorksheets([]);
     toast({
       title: 'Data Published',
-      description: `${previewData.length} student records are now live.`,
+      description: `${previewWorksheets.length} worksheets are now live.`,
     });
   };
 
   const handleStudentLookup = () => {
-    const student = studentData.find(s => 
-      s.studentId.toLowerCase() === studentLookup.toLowerCase() || 
-      s.name.toLowerCase().includes(studentLookup.toLowerCase())
+    if (worksheets.length === 0) {
+      toast({
+        title: 'No Data Available',
+        description: 'Please upload student data first.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const masterSheet = worksheets.find(w => w.name === 'Students');
+    if (!masterSheet) return;
+
+    const student = masterSheet.data.find(s => 
+      s['Student Number']?.toLowerCase() === studentLookup.toLowerCase() || 
+      s['Name']?.toLowerCase().includes(studentLookup.toLowerCase())
     );
     
     if (student) {
-      setFoundStudent(student);
+      // Compile data from all worksheets for this student
+      const compiledData: Student = { ...student };
+      worksheets.forEach(worksheet => {
+        if (worksheet.name !== 'Students') {
+          const studentRecord = worksheet.data.find(d => d['Student Number'] === student['Student Number']);
+          if (studentRecord) {
+            Object.assign(compiledData, studentRecord);
+          }
+        }
+      });
+      
+      setFoundStudent(compiledData);
       toast({
         title: 'Student Found',
-        description: `Displaying status for ${student.name}`,
+        description: `Displaying status for ${student['Name']}`,
       });
     } else {
       setFoundStudent(null);
       toast({
         title: 'Student Not Found',
-        description: 'Please check the Student ID or name and try again.',
+        description: 'Please check the Student Number or name and try again.',
         variant: 'destructive',
       });
     }
   };
 
-  const getColumnHeaders = (data: StudentStatus[]) => {
-    if (data.length === 0) return [];
-    const allKeys = new Set<string>();
-    data.forEach(student => {
-      Object.keys(student).forEach(key => allKeys.add(key));
+  const startEdit = (worksheetName: string, rowIndex: number, data: Record<string, any>) => {
+    setEditMode({ worksheet: worksheetName, row: rowIndex });
+    setEditingData({ ...data });
+  };
+
+  const saveEdit = () => {
+    if (!editMode) return;
+
+    setWorksheets(prev => prev.map(worksheet => {
+      if (worksheet.name === editMode.worksheet) {
+        const newData = [...worksheet.data];
+        newData[editMode.row] = { ...editingData };
+        return { ...worksheet, data: newData };
+      }
+      return worksheet;
+    }));
+
+    setEditMode(null);
+    setEditingData({});
+    toast({
+      title: 'Changes Saved',
+      description: 'Student record updated successfully.',
     });
-    return Array.from(allKeys);
+  };
+
+  const addNewStudent = (worksheetName: string) => {
+    const newStudentNumber = `STU${Date.now().toString().slice(-3)}`;
+    
+    setWorksheets(prev => prev.map(worksheet => {
+      if (worksheet.name === worksheetName) {
+        const newRecord: Record<string, any> = {};
+        worksheet.headers.forEach(header => {
+          newRecord[header] = header === 'Student Number' ? newStudentNumber : '';
+        });
+        return { ...worksheet, data: [...worksheet.data, newRecord] };
+      }
+      return worksheet;
+    }));
+
+    toast({
+      title: 'Student Added',
+      description: `New student ${newStudentNumber} added to ${worksheetName}.`,
+    });
+  };
+
+  const deleteStudent = (worksheetName: string, rowIndex: number) => {
+    setWorksheets(prev => prev.map(worksheet => {
+      if (worksheet.name === worksheetName) {
+        const newData = worksheet.data.filter((_, index) => index !== rowIndex);
+        return { ...worksheet, data: newData };
+      }
+      return worksheet;
+    }));
+
+    toast({
+      title: 'Student Removed',
+      description: 'Student record deleted successfully.',
+    });
   };
 
   if (!isAdmin) {
@@ -147,13 +247,13 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="student-lookup">Enter your Student ID or Name</Label>
+              <Label htmlFor="student-lookup">Enter your Student Number or Name</Label>
               <div className="flex gap-2">
                 <Input
                   id="student-lookup"
                   value={studentLookup}
                   onChange={(e) => setStudentLookup(e.target.value)}
-                  placeholder="e.g., 2023001 or Juan Dela Cruz"
+                  placeholder="e.g., STU001 or Juan Dela Cruz"
                   onKeyPress={(e) => e.key === 'Enter' && handleStudentLookup()}
                 />
                 <Button onClick={handleStudentLookup}>
@@ -166,20 +266,22 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
             {foundStudent && (
               <Card className="bg-blue-50">
                 <CardHeader>
-                  <CardTitle className="text-lg">Your Status</CardTitle>
+                  <CardTitle className="text-lg">Your Academic Status</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p><strong>Student ID:</strong> {foundStudent.studentId}</p>
-                      <p><strong>Name:</strong> {foundStudent.name}</p>
+                      <p><strong>Student Number:</strong> {foundStudent['Student Number']}</p>
+                      <p><strong>Name:</strong> {foundStudent['Name']}</p>
+                      <p><strong>Section:</strong> {foundStudent['Section']}</p>
                     </div>
-                    <div>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold">Academic Performance:</h4>
                       {Object.entries(foundStudent).map(([key, value]) => {
-                        if (key !== 'studentId' && key !== 'name' && value !== undefined && value !== '') {
+                        if (!['Student Number', 'Name', 'Section'].includes(key) && value !== undefined && value !== '') {
                           return (
                             <p key={key}>
-                              <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}
+                              <strong>{key}:</strong> {value}
                             </p>
                           );
                         }
@@ -191,10 +293,10 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
               </Card>
             )}
 
-            {studentData.length === 0 && (
+            {worksheets.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <FileText size={48} className="mx-auto mb-4 text-gray-300" />
-                <p>No student status data has been uploaded yet.</p>
+                <p>No student data has been uploaded yet.</p>
               </div>
             )}
           </CardContent>
@@ -206,11 +308,12 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="upload" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="upload">Upload Data</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="upload">Upload Excel</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
+          <TabsTrigger value="edit">Edit Data</TabsTrigger>
           <TabsTrigger value="current">Current Data</TabsTrigger>
-          <TabsTrigger value="history">Upload History</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload" className="space-y-4">
@@ -218,28 +321,29 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="text-blue-600" />
-                Upload Student Status Data
+                Upload Excel Workbook
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="file-upload">Select CSV/Excel File</Label>
+                <Label htmlFor="file-upload">Select Excel File (.xlsx)</Label>
                 <Input
                   id="file-upload"
                   type="file"
-                  accept=".csv,.xlsx"
+                  accept=".xlsx,.csv"
                   onChange={handleFileUpload}
                   className="mt-2"
                 />
               </div>
               
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Expected CSV Format:</h4>
-                <pre className="text-sm text-gray-600">
-{`Student ID,Name,Quiz 1,Quiz 2,Attendance,Remarks
-2023001,Juan Dela Cruz,9,10,Present,Doing well
-2023002,Maria Santos,7,8,Absent,Needs improvement`}
-                </pre>
+                <h4 className="font-semibold mb-2">Expected Excel Structure:</h4>
+                <div className="text-sm text-gray-600 space-y-2">
+                  <p><strong>Worksheet 1 (Students):</strong> Student Number, Name, Section</p>
+                  <p><strong>Worksheet 2 (Exams):</strong> Student Number, Midterm, Final</p>
+                  <p><strong>Worksheet 3 (Quizzes):</strong> Student Number, Quiz 1, Quiz 2, Quiz 3</p>
+                  <p><strong>Worksheet 4 (Projects):</strong> Student Number, Project 1, Project 2</p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -250,56 +354,172 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="text-blue-600" />
-                Preview Data
+                Preview Worksheets
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {previewData.length > 0 ? (
+              {previewWorksheets.length > 0 ? (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <p className="text-sm text-gray-600">
-                      {previewData.length} records ready to publish
+                      {previewWorksheets.length} worksheets ready to publish
                     </p>
                     <Button onClick={publishData} className="bg-green-600 hover:bg-green-700">
-                      Publish Data
+                      Publish All Data
                     </Button>
                   </div>
                   
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {getColumnHeaders(previewData).map(header => (
-                            <TableHead key={header} className="capitalize">
-                              {header.replace(/([A-Z])/g, ' $1').trim()}
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {previewData.slice(0, 10).map((student, index) => (
-                          <TableRow key={index}>
-                            {getColumnHeaders(previewData).map(header => (
-                              <TableCell key={header}>
-                                {student[header] || '-'}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  
-                  {previewData.length > 10 && (
-                    <p className="text-sm text-gray-500 text-center">
-                      Showing first 10 records. {previewData.length - 10} more will be included.
-                    </p>
-                  )}
+                  <Tabs defaultValue={previewWorksheets[0]?.name} className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                      {previewWorksheets.map(worksheet => (
+                        <TabsTrigger key={worksheet.name} value={worksheet.name}>
+                          {worksheet.name}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    
+                    {previewWorksheets.map(worksheet => (
+                      <TabsContent key={worksheet.name} value={worksheet.name}>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                {worksheet.headers.map(header => (
+                                  <TableHead key={header}>{header}</TableHead>
+                                ))}
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {worksheet.data.slice(0, 5).map((row, index) => (
+                                <TableRow key={index}>
+                                  {worksheet.headers.map(header => (
+                                    <TableCell key={header}>
+                                      {row[header] || '-'}
+                                    </TableCell>
+                                  ))}
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                        {worksheet.data.length > 5 && (
+                          <p className="text-sm text-gray-500 text-center mt-2">
+                            Showing first 5 records. {worksheet.data.length - 5} more will be included.
+                          </p>
+                        )}
+                      </TabsContent>
+                    ))}
+                  </Tabs>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <FileText size={48} className="mx-auto mb-4 text-gray-300" />
                   <p>No data to preview. Please upload a file first.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="edit">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Edit className="text-blue-600" />
+                Edit Student Data
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {worksheets.length > 0 ? (
+                <Tabs defaultValue={worksheets[0]?.name} className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    {worksheets.map(worksheet => (
+                      <TabsTrigger key={worksheet.name} value={worksheet.name}>
+                        {worksheet.name}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  
+                  {worksheets.map(worksheet => (
+                    <TabsContent key={worksheet.name} value={worksheet.name}>
+                      <div className="space-y-4">
+                        <div className="flex justify-end">
+                          <Button onClick={() => addNewStudent(worksheet.name)} className="flex items-center gap-2">
+                            <Plus size={16} />
+                            Add Student
+                          </Button>
+                        </div>
+                        
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                {worksheet.headers.map(header => (
+                                  <TableHead key={header}>{header}</TableHead>
+                                ))}
+                                <TableHead>Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {worksheet.data.map((row, index) => (
+                                <TableRow key={index}>
+                                  {worksheet.headers.map(header => (
+                                    <TableCell key={header}>
+                                      {editMode?.worksheet === worksheet.name && editMode?.row === index ? (
+                                        <Input
+                                          value={editingData[header] || ''}
+                                          onChange={(e) => setEditingData(prev => ({
+                                            ...prev,
+                                            [header]: e.target.value
+                                          }))}
+                                        />
+                                      ) : (
+                                        row[header] || '-'
+                                      )}
+                                    </TableCell>
+                                  ))}
+                                  <TableCell>
+                                    {editMode?.worksheet === worksheet.name && editMode?.row === index ? (
+                                      <div className="flex gap-2">
+                                        <Button size="sm" onClick={saveEdit}>
+                                          <Save size={14} />
+                                        </Button>
+                                        <Button size="sm" variant="outline" onClick={() => setEditMode(null)}>
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <div className="flex gap-2">
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline"
+                                          onClick={() => startEdit(worksheet.name, index, row)}
+                                        >
+                                          <Edit size={14} />
+                                        </Button>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline"
+                                          onClick={() => deleteStudent(worksheet.name, index)}
+                                        >
+                                          <Trash2 size={14} />
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Edit size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p>No data to edit. Please upload and publish data first.</p>
                 </div>
               )}
             </CardContent>
@@ -315,41 +535,47 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {studentData.length > 0 ? (
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-600">
-                    {studentData.length} student records currently live
-                  </p>
+              {worksheets.length > 0 ? (
+                <Tabs defaultValue={worksheets[0]?.name} className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    {worksheets.map(worksheet => (
+                      <TabsTrigger key={worksheet.name} value={worksheet.name}>
+                        {worksheet.name} ({worksheet.data.length})
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
                   
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {getColumnHeaders(studentData).map(header => (
-                            <TableHead key={header} className="capitalize">
-                              {header.replace(/([A-Z])/g, ' $1').trim()}
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {studentData.map((student, index) => (
-                          <TableRow key={index}>
-                            {getColumnHeaders(studentData).map(header => (
-                              <TableCell key={header}>
-                                {student[header] || '-'}
-                              </TableCell>
+                  {worksheets.map(worksheet => (
+                    <TabsContent key={worksheet.name} value={worksheet.name}>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              {worksheet.headers.map(header => (
+                                <TableHead key={header}>{header}</TableHead>
+                              ))}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {worksheet.data.map((row, index) => (
+                              <TableRow key={index}>
+                                {worksheet.headers.map(header => (
+                                  <TableCell key={header}>
+                                    {row[header] || '-'}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
                             ))}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <FileText size={48} className="mx-auto mb-4 text-gray-300" />
-                  <p>No student data published yet.</p>
+                  <p>No data published yet.</p>
                 </div>
               )}
             </CardContent>
@@ -371,7 +597,7 @@ const StudentStatusPanel: React.FC<StudentStatusPanelProps> = ({ isAdmin }) => {
                     <div key={index} className="flex justify-between items-center p-3 border rounded">
                       <div>
                         <p className="font-medium">{upload.filename}</p>
-                        <p className="text-sm text-gray-600">{upload.recordCount} records</p>
+                        <p className="text-sm text-gray-600">{upload.worksheetCount} worksheets</p>
                       </div>
                       <p className="text-sm text-gray-500">{upload.date}</p>
                     </div>
