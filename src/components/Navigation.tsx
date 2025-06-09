@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Menu, Settings, GraduationCap, UserCheck } from 'lucide-react';
+import { Menu, Settings, GraduationCap, UserCheck, Home } from 'lucide-react';
 
 interface NavigationProps {
   activeTab: string;
@@ -13,6 +13,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
+    { id: 'home', label: 'Home', icon: Home },
     { id: 'instructor', label: 'Instructor', icon: UserCheck },
     { id: 'admin', label: 'Admin', icon: Settings },
   ];

@@ -181,6 +181,7 @@ const Index = () => {
           </Card>
         );
 
+      case 'home':
       default:
         return (
           <div className="space-y-8 animate-fade-in">
