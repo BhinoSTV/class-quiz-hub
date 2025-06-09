@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -155,112 +156,6 @@ const Index = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'lectures':
-        return (
-          <div className="space-y-8 animate-fade-in">
-            {Object.entries(lecturesByWeek).map(([week, weekLectures]) => (
-              <Card key={week} className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] overflow-hidden">
-                <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500"></div>
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                  <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                      {week}
-                    </div>
-                    Week {week}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-8">
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {weekLectures.map((lecture) => (
-                      <Card key={lecture.id} className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 bg-gradient-to-br from-white to-blue-50/50 overflow-hidden">
-                        <div className="h-1 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300"></div>
-                        <CardContent className="p-6" onClick={() => handleLectureSelect(lecture)}>
-                          <div className="flex items-start gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                              <BookOpen className="text-white" size={20} />
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-bold text-gray-800 mb-2 group-hover:text-blue-700 transition-colors duration-300">{lecture.title}</h3>
-                              <p className="text-sm text-gray-600 mb-4 leading-relaxed">{lecture.description}</p>
-                            </div>
-                          </div>
-                          <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                            Watch Lecture
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        );
-
-      case 'quizzes':
-        return (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-fade-in">
-            {quizzes.map((quiz) => {
-              const lecture = lectures.find(l => l.id === quiz.lectureId);
-              return (
-                <Card key={quiz.id} className="group cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border-0 bg-gradient-to-br from-white to-purple-50/50 overflow-hidden">
-                  <div className="h-2 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:from-purple-500 group-hover:to-pink-500 transition-all duration-300"></div>
-                  <CardContent className="p-8" onClick={() => handleQuizSelect(quiz)}>
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <Award className="text-white" size={24} />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-700 transition-colors duration-300">{quiz.title}</h3>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Related to: <span className="font-medium text-purple-600">{lecture?.title}</span>
-                        </p>
-                        <p className="text-sm text-gray-500 flex items-center gap-2">
-                          <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                          {quiz.questions.length} questions
-                        </p>
-                      </div>
-                    </div>
-                    <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                      Take Quiz
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        );
-
-      case 'students':
-        return (
-          <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm animate-fade-in">
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-100">
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-blue-700 bg-clip-text text-transparent flex items-center gap-3">
-                <Users className="text-indigo-600" size={28} />
-                Student Dashboard
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              <StudentDashboard scores={studentScores} lectures={lectures} quizzes={quizzes} />
-            </CardContent>
-          </Card>
-        );
-
-      case 'status':
-        return (
-          <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm animate-fade-in">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-700 to-emerald-700 bg-clip-text text-transparent flex items-center gap-3">
-                <FileText className="text-green-600" size={28} />
-                Student Status Panel
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              <StudentStatusPanel isAdmin={isAdmin} />
-            </CardContent>
-          </Card>
-        );
-
       case 'instructor':
         return <InstructorProfile />;
 
@@ -287,7 +182,163 @@ const Index = () => {
         );
 
       default:
-        return null;
+        return (
+          <div className="space-y-8 animate-fade-in">
+            {/* Main Navigation Cards */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              <Card className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 border-0 bg-gradient-to-br from-white to-blue-50/70 overflow-hidden"
+                    onClick={() => setActiveTab('lectures')}>
+                <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500"></div>
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <BookOpen className="text-white" size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-700 transition-colors">Lectures</h3>
+                  <p className="text-gray-600 text-sm">Watch course videos and learn</p>
+                </CardContent>
+              </Card>
+
+              <Card className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 border-0 bg-gradient-to-br from-white to-purple-50/70 overflow-hidden"
+                    onClick={() => setActiveTab('quizzes')}>
+                <div className="h-2 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500"></div>
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Award className="text-white" size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-purple-700 transition-colors">Quizzes</h3>
+                  <p className="text-gray-600 text-sm">Test your knowledge</p>
+                </CardContent>
+              </Card>
+
+              <Card className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 border-0 bg-gradient-to-br from-white to-indigo-50/70 overflow-hidden"
+                    onClick={() => setActiveTab('students')}>
+                <div className="h-2 bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-500"></div>
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <Users className="text-white" size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-700 transition-colors">Students</h3>
+                  <p className="text-gray-600 text-sm">View student dashboard</p>
+                </CardContent>
+              </Card>
+
+              <Card className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 border-0 bg-gradient-to-br from-white to-green-50/70 overflow-hidden"
+                    onClick={() => setActiveTab('status')}>
+                <div className="h-2 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500"></div>
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <FileText className="text-white" size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-green-700 transition-colors">Status</h3>
+                  <p className="text-gray-600 text-sm">Check student progress</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Content based on selected tab */}
+            {activeTab === 'lectures' && (
+              <div className="space-y-8">
+                {Object.entries(lecturesByWeek).map(([week, weekLectures]) => (
+                  <Card key={week} className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] overflow-hidden">
+                    <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500"></div>
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                      <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                          {week}
+                        </div>
+                        Week {week}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8">
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {weekLectures.map((lecture) => (
+                          <Card key={lecture.id} className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 bg-gradient-to-br from-white to-blue-50/50 overflow-hidden">
+                            <div className="h-1 bg-gradient-to-r from-blue-400 to-purple-400 group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300"></div>
+                            <CardContent className="p-6" onClick={() => handleLectureSelect(lecture)}>
+                              <div className="flex items-start gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                  <BookOpen className="text-white" size={20} />
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="font-bold text-gray-800 mb-2 group-hover:text-blue-700 transition-colors duration-300">{lecture.title}</h3>
+                                  <p className="text-sm text-gray-600 mb-4 leading-relaxed">{lecture.description}</p>
+                                </div>
+                              </div>
+                              <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                Watch Lecture
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'quizzes' && (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {quizzes.map((quiz) => {
+                  const lecture = lectures.find(l => l.id === quiz.lectureId);
+                  return (
+                    <Card key={quiz.id} className="group cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border-0 bg-gradient-to-br from-white to-purple-50/50 overflow-hidden">
+                      <div className="h-2 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:from-purple-500 group-hover:to-pink-500 transition-all duration-300"></div>
+                      <CardContent className="p-8" onClick={() => handleQuizSelect(quiz)}>
+                        <div className="flex items-start gap-4 mb-6">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <Award className="text-white" size={24} />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-700 transition-colors duration-300">{quiz.title}</h3>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Related to: <span className="font-medium text-purple-600">{lecture?.title}</span>
+                            </p>
+                            <p className="text-sm text-gray-500 flex items-center gap-2">
+                              <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                              {quiz.questions.length} questions
+                            </p>
+                          </div>
+                        </div>
+                        <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                          Take Quiz
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {activeTab === 'students' && (
+              <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-100">
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-blue-700 bg-clip-text text-transparent flex items-center gap-3">
+                    <Users className="text-indigo-600" size={28} />
+                    Student Dashboard
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <StudentDashboard scores={studentScores} lectures={lectures} quizzes={quizzes} />
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'status' && (
+              <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-700 to-emerald-700 bg-clip-text text-transparent flex items-center gap-3">
+                    <FileText className="text-green-600" size={28} />
+                    Student Status Panel
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <StudentStatusPanel isAdmin={isAdmin} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
     }
   };
 
